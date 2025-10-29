@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大场社区卫生服务中心 - 老年人免费体检预约系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #4a90e2, #63b3ed);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .header-logo {
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        h1, h2, h3 {
+            margin-bottom: 20px;
+            color: #2c5282;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #4a90e2, #63b3ed);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(66, 153, 225, 0.4);
+        }
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .time-slot {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f7fafc;
+        }
+        .time-slot:hover {
+            background-color: #ebf8ff;
+            border-color: #90cdf4;
+        }
+        .time-slot.selected {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #2b6cb0;
+        }
+        .time-slot.full {
+            background-color: #fed7d7;
+            color: #742a2a;
+            cursor: not-allowed;
+            border-color: #fc8181;
+        }
+        .appointment-details {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+        }
+        .appointment-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .success {
+            color: #22543d;
+            background-color: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .error {
+            color: #742a2a;
+            background-color: #fed7d7;
+            border: 1px solid #feb2b2;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .hidden {
+            display: none;
+        }
+        .info-item {
+            margin-bottom: 12px;
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 140px;
+            color: #4a5568;
+        }
+        .info-value {
+            flex: 1;
+            color: #2d3748;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-item input {
+            width: auto;
+            margin-right: 8px;
+        }
+        .age-warning {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .projects-summary {
+            margin-top: 10px;
+            font-style: italic;
+            color: #4a5568;
+        }
+        .validation-error {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #4a5568;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            color: #4a90e2;
+            border-bottom: 3px solid #4a90e2;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 后台管理样式 */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #4a90e2, #63b3ed);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        tr:hover {
+            background-color: #f7fafc;
+        }
+        
+        /* 二维码样式 */
+        .qrcode-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+        }
+        #qrcode {
+            display: inline-block;
+            margin: 0 auto;
+        }
+        .qrcode-text {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #4a5568;
+        }
+        
+        /* 登录页面样式 */
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .appointment-card {
+                border: 2px solid #000;
+                box-shadow: none;
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+            .time-slots {
+                grid-template-columns: 1fr;
+            }
+            .checkbox-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+            .header-logo {
+                position: static;
+                transform: none;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主预约页面 -->
+    <div id="main-app" class="container">
+        <header>
+            <div class="header-logo">
+                <i class="fas fa-hospital-alt"></i>
+            </div>
+            <h1>大场社区卫生服务中心</h1>
+            <p>老年人免费体检预约系统</p>
+        </header>
+
+        <div class="tabs no-print">
+            <div class="tab active" data-tab="appointment">预约体检</div>
+            <div class="tab" data-tab="qrcode">手机预约</div>
+            <div class="tab" id="admin-tab-link" data-tab="admin" style="display: none;">后台管理</div>
+        </div>
+
+        <!-- 预约体检标签页 -->
+        <div class="tab-content active" id="appointment-tab">
+            <div class="card">
+                <h2><i class="fas fa-user-circle"></i> 个人信息</h2>
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="name">姓名</label>
+                        <input type="text" id="name" required placeholder="请输入您的姓名">
+                    </div>
+                    <div class="form-group">
+                        <label for="idCard">身份证号</label>
+                        <input type="text" id="idCard" required placeholder="请输入18位身份证号码">
+                        <div class="validation-error" id="idCardError">请输入有效的身份证号码</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">联系电话</label>
+                        <input type="tel" id="phone" required placeholder="请输入您的手机号码">
+                        <div class="validation-error" id="phoneError">请输入有效的手机号码</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">年龄</label>
+                        <input type="number" id="age" required min="65" placeholder="请输入年龄">
+                        <div class="age-warning" id="ageWarning">本系统仅适用于65周岁及以上老年人</div>
+                    </div>
+                    <div class="form-group">
+                        <label>预约项目（至少选择一项）</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bUltrasound" value="B超">
+                                <label for="bUltrasound">B超检查</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="ecg" value="心电图">
+                                <label for="ecg">心电图检查</label>
+                            </div>
+                        </div>
+                        <div class="projects-summary" id="projectsSummary">您尚未选择任何检查项目</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-calendar-alt"></i> 选择预约时间</h2>
+                <div class="form-group">
+                    <label for="appointmentDate">选择日期</label>
+                    <input type="date" id="appointmentDate" required>
+                </div>
+                
+                <div id="timeSlotsContainer" class="hidden">
+                    <h3>可选时间段 (每半小时最多5人)</h3>
+                    <div id="timeSlots" class="time-slots">
+                        <!-- 时间段将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div id="appointmentDetails" class="appointment-details">
+                    <div class="success">您已选择时间段: <span id="selectedTime"></span></div>
+                    <button id="confirmAppointment">确认预约</button>
+                </div>
+            </div>
+
+            <div id="appointmentResult" class="card hidden">
+                <h2><i class="fas fa-check-circle"></i> 预约成功</h2>
+                <div class="appointment-card" id="appointmentInfo">
+                    <!-- 预约信息将通过JavaScript动态生成 -->
+                </div>
+                <div class="no-print" style="margin-top: 20px; display: flex; gap: 15px;">
+                    <button onclick="window.print()"><i class="fas fa-print"></i> 打印预约凭证</button>
+                    <button id="newAppointment"><i class="fas fa-plus-circle"></i> 新的预约</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 手机预约标签页 -->
+        <div class="tab-content" id="qrcode-tab">
+            <div class="card">
+                <h2><i class="fas fa-mobile-alt"></i> 手机扫码预约</h2>
+                <p>使用微信扫描下方二维码，即可在手机上完成预约</p>
+                
+                <div class="qrcode-container">
+                    <div id="qrcode"></div>
+                    <div class="qrcode-text">
+                        微信扫描二维码，快速预约体检
+                    </div>
+                </div>
+                
+                <div class="appointment-card">
+                    <h3><i class="fas fa-info-circle"></i> 预约须知</h3>
+                    <ul style="padding-left: 20px; margin-top: 15px;">
+                        <li>本系统仅适用于65周岁及以上老年人</li>
+                        <li>请提前15分钟到达中心（汶水路1662号）</li>
+                        <li>请携带身份证和预约凭证</li>
+                        <li>体检项目须知：待完善</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 后台管理标签页 -->
+        <div class="tab-content" id="admin-tab">
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> 预约统计</h2>
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">今日预约</div>
+                        <div class="stat-number" id="todayCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">本周预约</div>
+                        <div class="stat-number" id="weekCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">总预约数</div>
+                        <div class="stat-number" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">热门项目</div>
+                        <div class="stat-number" id="popularProject">-</div>
+                    </div>
+                </div>
+                
+                <h3><i class="fas fa-list"></i> 所有预约记录</h3>
+                <div class="form-group">
+                    <label for="searchDate">按日期筛选</label>
+                    <input type="date" id="searchDate">
+                    <button id="searchButton" style="margin-top: 10px;">搜索</button>
+                    <button id="exportButton" style="margin-top: 10px; margin-left: 10px;"><i class="fas fa-file-export"></i> 导出数据</button>
+                </div>
+                
+                <table id="appointmentsTable">
+                    <thead>
+                        <tr>
+                            <th>预约编号</th>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>联系电话</th>
+                            <th>年龄</th>
+                            <th>预约日期</th>
+                            <th>时间段</th>
+                            <th>检查项目</th>
+                            <th>预约时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 预约数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 后台登录页面 -->
+    <div id="login-page" class="container" style="display: none;">
+        <div class="login-container">
+            <div class="login-header">
+                <h1><i class="fas fa-lock"></i> 后台管理系统</h1>
+                <p>大场社区卫生服务中心</p>
+            </div>
+            <div class="card">
+                <h2>管理员登录</h2>
+                <div class="form-group">
+                    <label for="adminPassword">密码</label>
+                    <input type="password" id="adminPassword" placeholder="请输入管理员密码">
+                </div>
+                <button id="loginButton">登录</button>
+                <div id="loginError" class="error" style="display: none; margin-top: 15px;">
+                    密码错误，请重试
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查URL参数，判断是否显示后台管理
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminPage = urlParams.has('admin');
+        
+        if (isAdminPage) {
+            // 显示登录页面，隐藏主应用
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+        } else {
+            // 显示主应用，隐藏登录页面
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('login-page').style.display = 'none';
+            
+            // 在普通页面隐藏后台管理标签
+            document.getElementById('admin-tab-link').style.display = 'none';
+        }
+        
+        // 管理员密码（在实际应用中应该使用更安全的验证方式）
+        const ADMIN_PASSWORD = "admin123";
+        
+        // 登录按钮事件
+        document.getElementById('loginButton').addEventListener('click', function() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                // 密码正确，显示主应用并激活后台管理标签
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('admin-tab-link').style.display = 'block';
+                
+                // 切换到后台管理标签
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('admin-tab-link').classList.add('active');
+                document.getElementById('admin-tab').classList.add('active');
+                
+                // 更新统计数据
+                updateAdminStats();
+                loadAppointmentsTable();
+            } else {
+                // 密码错误
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+        
+        // 模拟数据库 - 存储预约信息
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || {};
+        
+        // 初始化日期选择器 - 只能选择工作日
+        const dateInput = document.getElementById('appointmentDate');
+        const today = new Date();
+        const maxDate = new Date();
+        maxDate.setDate(today.getDate() + 30); // 最多可预约30天内
+        
+        dateInput.min = formatDate(today);
+        dateInput.max = formatDate(maxDate);
+        
+        // 年龄验证
+        const ageInput = document.getElementById('age');
+        const ageWarning = document.getElementById('ageWarning');
+        
+        ageInput.addEventListener('blur', function() {
+            if (this.value < 65) {
+                ageWarning.style.display = 'block';
+            } else {
+                ageWarning.style.display = 'none';
+            }
+        });
+        
+        // 身份证验证
+        const idCardInput = document.getElementById('idCard');
+        const idCardError = document.getElementById('idCardError');
+        
+        idCardInput.addEventListener('blur', function() {
+            if (!validateIdCard(this.value)) {
+                idCardError.style.display = 'block';
+            } else {
+                idCardError.style.display = 'none';
+            }
+        });
+        
+        // 手机号验证
+        const phoneInput = document.getElementById('phone');
+        const phoneError = document.getElementById('phoneError');
+        
+        phoneInput.addEventListener('blur', function() {
+            if (!validatePhone(this.value)) {
+                phoneError.style.display = 'block';
+            } else {
+                phoneError.style.display = 'none';
+            }
+        });
+        
+        // 项目选择更新
+        const bUltrasoundCheckbox = document.getElementById('bUltrasound');
+        const ecgCheckbox = document.getElementById('ecg');
+        const projectsSummary = document.getElementById('projectsSummary');
+        
+        function updateProjectsSummary() {
+            const selectedProjects = [];
+            if (bUltrasoundCheckbox.checked) selectedProjects.push('B超');
+            if (ecgCheckbox.checked) selectedProjects.push('心电图');
+            
+            if (selectedProjects.length > 0) {
+                projectsSummary.textContent = `已选择: ${selectedProjects.join(' + ')}`;
+                projectsSummary.style.color = '#22543d';
+            } else {
+                projectsSummary.textContent = '您尚未选择任何检查项目';
+                projectsSummary.style.color = '#e53e3e';
+            }
+        }
+        
+        bUltrasoundCheckbox.addEventListener('change', updateProjectsSummary);
+        ecgCheckbox.addEventListener('change', updateProjectsSummary);
+        
+        // 标签页切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有激活状态
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // 激活当前标签
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+                
+                // 如果是后台管理标签，更新统计数据
+                if (this.getAttribute('data-tab') === 'admin') {
+                    updateAdminStats();
+                    loadAppointmentsTable();
+                }
+                
+                // 如果是二维码标签，生成二维码
+                if (this.getAttribute('data-tab') === 'qrcode') {
+                    generateQRCode();
+                }
+            });
+        });
+        
+        // 监听日期变化
+        dateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            if (isWeekday(selectedDate)) {
+                generateTimeSlots(selectedDate);
+                document.getElementById('timeSlotsContainer').classList.remove('hidden');
+            } else {
+                alert('请选择工作日（周一至周五）');
+                this.value = '';
+                document.getElementById('timeSlotsContainer').classList.add('hidden');
+            }
+        });
+        
+        // 确认预约按钮
+        document.getElementById('confirmAppointment').addEventListener('click', function() {
+            if (validateForm()) {
+                saveAppointment();
+            }
+        });
+        
+        // 新的预约按钮
+        document.getElementById('newAppointment').addEventListener('click', function() {
+            document.getElementById('appointmentResult').classList.add('hidden');
+            document.getElementById('userForm').reset();
+            dateInput.value = '';
+            document.getElementById('timeSlotsContainer').classList.add('hidden');
+            document.getElementById('appointmentDetails').classList.add('hidden');
+            projectsSummary.textContent = '您尚未选择任何检查项目';
+            projectsSummary.style.color = '#4a5568';
+            idCardError.style.display = 'none';
+            phoneError.style.display = 'none';
+            ageWarning.style.display = 'none';
+        });
+        
+        // 搜索按钮
+        document.getElementById('searchButton').addEventListener('click', function() {
+            loadAppointmentsTable();
+        });
+        
+        // 导出数据按钮
+        document.getElementById('exportButton').addEventListener('click', function() {
+            exportAppointmentsData();
+        });
+        
+        // 生成时间段
+        function generateTimeSlots(date) {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+            
+            const dateStr = formatDate(date);
+            const timeSlots = [
+                '13:30-14:00', '14:00-14:30', '14:30-15:00', 
+                '15:00-15:30', '15:30-16:00'
+            ];
+            
+            timeSlots.forEach(slot => {
+                const slotElement = document.createElement('div');
+                slotElement.className = 'time-slot';
+                
+                // 检查该时间段是否已满
+                const slotKey = `${dateStr} ${slot}`;
+                const currentCount = appointments[slotKey] ? appointments[slotKey].length : 0;
+                const isFull = currentCount >= 5;
+                
+                if (isFull) {
+                    slotElement.classList.add('full');
+                }
+                
+                slotElement.innerHTML = `
+                    <div style="font-weight: bold;">${slot}</div>
+                    <div>剩余: ${5 - currentCount}/5</div>
+                `;
+                
+                if (!isFull) {
+                    slotElement.addEventListener('click', function() {
+                        // 清除之前的选择
+                        document.querySelectorAll('.time-slot').forEach(el => {
+                            el.classList.remove('selected');
+                        });
+                        
+                        // 选中当前时间段
+                        this.classList.add('selected');
+                        
+                        // 显示预约详情
+                        document.getElementById('selectedTime').textContent = `${dateStr} ${slot}`;
+                        document.getElementById('appointmentDetails').style.display = 'block';
+                    });
+                }
+                
+                timeSlotsContainer.appendChild(slotElement);
+            });
+        }
+        
+        // 保存预约
+        function saveAppointment() {
+            const name = document.getElementById('name').value;
+            const idCard = document.getElementById('idCard').value;
+            const phone = document.getElementById('phone').value;
+            const age = document.getElementById('age').value;
+            const selectedDate = document.getElementById('appointmentDate').value;
+            const selectedTimeSlot = document.querySelector('.time-slot.selected');
+            
+            if (!selectedTimeSlot) {
+                alert('请选择预约时间段');
+                return;
+            }
+            
+            const timeText = selectedTimeSlot.querySelector('div').textContent;
+            const slotKey = `${selectedDate} ${timeText}`;
+            
+            // 获取选中的项目
+            const selectedProjects = [];
+            if (bUltrasoundCheckbox.checked) selectedProjects.push('B超');
+            if (ecgCheckbox.checked) selectedProjects.push('心电图');
+            
+            // 创建预约记录
+            const appointment = {
+                id: generateId(),
+                name,
+                idCard,
+                phone,
+                age,
+                date: selectedDate,
+                time: timeText,
+                projects: selectedProjects,
+                createdAt: new Date().toISOString()
+            };
+            
+            // 保存到"数据库"
+            if (!appointments[slotKey]) {
+                appointments[slotKey] = [];
+            }
+            appointments[slotKey].push(appointment);
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            
+            // 显示预约结果
+            displayAppointmentResult(appointment);
+        }
+        
+        // 显示预约结果
+        function displayAppointmentResult(appointment) {
+            const appointmentInfo = document.getElementById('appointmentInfo');
+            appointmentInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">预约编号:</div>
+                    <div class="info-value">${appointment.id}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">姓名:</div>
+                    <div class="info-value">${appointment.name}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">身份证号:</div>
+                    <div class="info-value">${appointment.idCard}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">联系电话:</div>
+                    <div class="info-value">${appointment.phone}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">年龄:</div>
+                    <div class="info-value">${appointment.age}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">预约日期:</div>
+                    <div class="info-value">${appointment.date}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">预约时间:</div>
+                    <div class="info-value">${appointment.time}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">检查项目:</div>
+                    <div class="info-value">${appointment.projects.join('、')}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">预约时间:</div>
+                    <div class="info-value">${new Date(appointment.createdAt).toLocaleString()}</div>
+                </div>
+                <div style="margin-top: 25px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px;">
+                    <strong>温馨提示:</strong><br>
+                    1. 请携带身份证或医保卡，凭本预约凭证，在预约时间段前15分钟到达体检中心。<br>
+                    2. 如需取消预约，请提前一天致电：021-66391586<br>
+                    3. 体检要求：待补充完善。
+                </div>
+            `;
+            
+            document.getElementById('appointmentResult').classList.remove('hidden');
+        }
+        
+        // 更新后台统计
+        function updateAdminStats() {
+            let todayCount = 0;
+            let weekCount = 0;
+            let totalCount = 0;
+            const projectCount = { 'B超': 0, '心电图': 0 };
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1); // 本周一
+            
+            // 遍历所有预约
+            Object.values(appointments).forEach(slotAppointments => {
+                slotAppointments.forEach(appointment => {
+                    totalCount++;
+                    const appointmentDate = new Date(appointment.date);
+                    
+                    // 今日预约
+                    if (formatDate(appointmentDate) === formatDate(today)) {
+                        todayCount++;
+                    }
+                    
+                    // 本周预约
+                    if (appointmentDate >= startOfWeek && appointmentDate <= today) {
+                        weekCount++;
+                    }
+                    
+                    // 项目统计
+                    appointment.projects.forEach(project => {
+                        if (projectCount[project] !== undefined) {
+                            projectCount[project]++;
+                        }
+                    });
+                });
+            });
+            
+            // 更新统计数字
+            document.getElementById('todayCount').textContent = todayCount;
+            document.getElementById('weekCount').textContent = weekCount;
+            document.getElementById('totalCount').textContent = totalCount;
+            
+            // 热门项目
+            let popularProject = '-';
+            if (projectCount['B超'] > projectCount['心电图']) {
+                popularProject = 'B超';
+            } else if (projectCount['心电图'] > projectCount['B超']) {
+                popularProject = '心电图';
+            } else if (projectCount['B超'] > 0) {
+                popularProject = '两者相当';
+            }
+            document.getElementById('popularProject').textContent = popularProject;
+        }
+        
+        // 加载预约表格
+        function loadAppointmentsTable() {
+            const tableBody = document.querySelector('#appointmentsTable tbody');
+            tableBody.innerHTML = '';
+            
+            const searchDate = document.getElementById('searchDate').value;
+            let allAppointments = [];
+            
+            // 收集所有预约
+            Object.values(appointments).forEach(slotAppointments => {
+                slotAppointments.forEach(appointment => {
+                    if (!searchDate || appointment.date === searchDate) {
+                        allAppointments.push(appointment);
+                    }
+                });
+            });
+            
+            // 按日期和时间排序
+            allAppointments.sort((a, b) => {
+                if (a.date !== b.date) {
+                    return a.date.localeCompare(b.date);
+                }
+                return a.time.localeCompare(b.time);
+            });
+            
+            // 填充表格
+            allAppointments.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${appointment.id}</td>
+                    <td>${appointment.name}</td>
+                    <td>${appointment.idCard}</td>
+                    <td>${appointment.phone}</td>
+                    <td>${appointment.age}</td>
+                    <td>${appointment.date}</td>
+                    <td>${appointment.time}</td>
+                    <td>${appointment.projects.join('、')}</td>
+                    <td>${new Date(appointment.createdAt).toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            if (allAppointments.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="9" style="text-align: center;">${searchDate ? '该日期无预约记录' : '暂无预约记录'}</td>`;
+                tableBody.appendChild(row);
+            }
+        }
+        
+        // 导出数据
+        function exportAppointmentsData() {
+            let csvContent = "预约编号,姓名,身份证号,联系电话,年龄,预约日期,时间段,检查项目,预约时间\n";
+            
+            // 收集所有预约
+            Object.values(appointments).forEach(slotAppointments => {
+                slotAppointments.forEach(appointment => {
+                    csvContent += `"${appointment.id}","${appointment.name}","${appointment.idCard}","${appointment.phone}","${appointment.age}","${appointment.date}","${appointment.time}","${appointment.projects.join('、')}","${new Date(appointment.createdAt).toLocaleString()}"\n`;
+                });
+            });
+            
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `体检预约数据_${formatDate(new Date())}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 生成二维码
+        function generateQRCode() {
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            
+            // 生成当前页面的URL（去掉admin参数）
+            const currentUrl = window.location.origin + window.location.pathname;
+            
+            // 使用QRCode库生成二维码
+            new QRCode(qrcodeContainer, {
+                text: currentUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // 验证身份证号码
+        function validateIdCard(idCard) {
+            // 简单的身份证格式验证
+            const reg = /^\d{17}[\dXx]$/;
+            if (!reg.test(idCard)) {
+                return false;
+            }
+            
+            // 验证生日部分
+            const year = idCard.substring(6, 10);
+            const month = idCard.substring(10, 12);
+            const day = idCard.substring(12, 14);
+            const birthday = new Date(year, month - 1, day);
+            
+            if (birthday.getFullYear() != year || 
+                birthday.getMonth() != month - 1 || 
+                birthday.getDate() != day) {
+                return false;
+            }
+            
+            // 验证年龄是否大于65岁
+            const today = new Date();
+            const age = today.getFullYear() - parseInt(year);
+            if (age < 65) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 验证手机号码
+        function validatePhone(phone) {
+            const reg = /^1[3-9]\d{9}$/;
+            return reg.test(phone);
+        }
+        
+        // 工具函数
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        function isWeekday(date) {
+            const day = date.getDay();
+            return day !== 0 && day !== 6; // 0是周日，6是周六
+        }
+        
+        function generateId() {
+            return 'APT' + Date.now().toString().slice(-8);
+        }
+        
+        function validateForm() {
+            const name = document.getElementById('name').value;
+            const idCard = document.getElementById('idCard').value;
+            const phone = document.getElementById('phone').value;
+            const age = document.getElementById('age').value;
+            
+            if (!name || !idCard || !phone || !age) {
+                alert('请填写完整的个人信息');
+                return false;
+            }
+            
+            if (age < 65) {
+                alert('本系统仅适用于65周岁及以上老年人');
+                return false;
+            }
+            
+            // 身份证验证
+            if (!validateIdCard(idCard)) {
+                alert('请输入有效的身份证号码');
+                return false;
+            }
+            
+            // 手机号验证
+            if (!validatePhone(phone)) {
+                alert('请输入有效的手机号码');
+                return false;
+            }
+            
+            // 检查是否至少选择了一个项目
+            if (!bUltrasoundCheckbox.checked && !ecgCheckbox.checked) {
+                alert('请至少选择一项检查项目');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 初始化：禁用周末选择
+        dateInput.addEventListener('input', function() {
+            const selectedDate = new Date(this.value);
+            if (!isWeekday(selectedDate)) {
+                alert('请选择工作日（周一至周五）');
+                this.value = '';
+            }
+        });
+        
+        // 初始化项目选择状态
+        updateProjectsSummary();
+        
+        // 初始化后台统计数据
+        if (isAdminPage) {
+            updateAdminStats();
+        }
+        
+        // 初始化二维码
+        generateQRCode();
+    </script>
+</body>
+</html>
